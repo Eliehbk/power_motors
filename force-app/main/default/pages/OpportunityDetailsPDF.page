@@ -1,0 +1,72 @@
+<apex:page standardController="Opportunity" renderAs="pdf" applyBodyTag="false">
+    <head>
+        <style>
+            body { font-family: 'Arial Unicode MS', sans-serif; font-size: 14px; color: #333; line-height: 1.5; }
+            .header-table { width: 100%; border-bottom: 3px solid #005A9C; padding-bottom: 15px; margin-bottom: 30px; }
+            .company-title { font-size: 26px; font-weight: bold; color: #005A9C; }
+            .doc-type { font-size: 18px; text-align: right; color: #555; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+            .status-badge { padding: 6px 12px; font-weight: bold; border-radius: 4px; display: inline-block; color: white; }
+            .status-won { background-color: #2E7D32; } 
+            .status-lost { background-color: #C62828; } 
+            .summary-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            .summary-table td { padding: 12px 15px; border-bottom: 1px solid #E0E0E0; }
+            .label-col { font-weight: bold; color: #555; width: 35%; }
+            .footer { margin-top: 60px; text-align: center; font-size: 11px; color: #777; border-top: 1px solid #E0E0E0; padding-top: 15px; }
+        </style>
+    </head>
+    <body>
+        <table class="header-table">
+            <tr>
+                <td class="company-title">Power-Motors</td>
+                <td class="doc-type">
+                    <apex:outputText value="Order Summary" rendered="{!Opportunity.IsWon == true}" />
+                    <apex:outputText value="Project Closure Summary" rendered="{!Opportunity.IsWon == false && Opportunity.IsClosed == true}" />
+                </td>
+            </tr>
+        </table>
+
+        <p>Dear Valued Partner,</p>
+        <p>Please find the finalized details regarding our recent business engagement outlined below.</p>
+
+        <table class="summary-table">
+            <tr>
+                <td class="label-col">Project / Order Name</td>
+                <td><apex:outputText value="{!Opportunity.Name}" /></td>
+            </tr>
+            <tr>
+                <td class="label-col">Company</td>
+                <td><apex:outputText value="{!Opportunity.Account.Name}" /></td>
+            </tr>
+            <tr>
+                <td class="label-col">Date Finalized</td>
+                <td>
+                    <apex:outputText value="{0, date, MMMM d, yyyy}">
+                        <apex:param value="{!Opportunity.CloseDate}" />
+                    </apex:outputText>
+                </td>
+            </tr>
+            <tr>
+                <td class="label-col">Total Investment</td>
+                <td style="font-size: 15px; font-weight: bold; color: #005A9C;">
+                    $<apex:outputText value="{0, number, #,##0.00}">
+                        <apex:param value="{!Opportunity.Amount}" />
+                    </apex:outputText>
+                </td>
+            </tr>
+            <tr>
+                <td class="label-col">Current Status</td>
+                <td>
+                    <apex:outputText value="{!Opportunity.StageName}">
+                        <apex:param value="{!Opportunity.StageName}" />
+                    </apex:outputText>
+                    
+                </td>
+            </tr>
+        </table>
+
+        <div class="footer">
+            <apex:outputText value="Power-Motors Quality and Innovation — Ensuring your comfort and peace of mind." /><br/>
+            If you have any questions regarding this document summary, please get in touch with your account manager.
+        </div>
+    </body>
+</apex:page>
