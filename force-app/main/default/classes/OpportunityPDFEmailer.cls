@@ -3,8 +3,8 @@ public class OpportunityPDFEmailer {
     @InvocableMethod(label='Send Opportunity PDF to Representatives' description='Generates a PDF summary and emails it to all related opportunity contacts.')
     public static void sendOpportunityPDF(List<Id> opportunityIds) {
         if (opportunityIds == null || opportunityIds.isEmpty()) return;
+    
         
-        // 1. Get all related Opportunity Contacts (Representatives)
         Id oppId = opportunityIds[0]; // Flow processes records individually when triggered
         List<OpportunityContactRole> contactRoles = [
             SELECT Contact.Email, Contact.Name 
@@ -47,26 +47,12 @@ public class OpportunityPDFEmailer {
         if (opp.Amount != null) {
             formattedAmount = '$' + opp.Amount.setScale(2).format();
         }
-        // 3. Prepare Email Attachment
-      //  Messaging.EmailFileAttachment attachment = new Messaging.EmailFileAttachment();
-        //attachment.setFileName('Opportunity_Details_' + oppId + '.pdf');
-      //  attachment.setBody(pdfBlob);
-       // attachment.setContentType('application/pdf');
-        
+
         // 4. Gather Recipient Email Addresses
         List<String> toAddresses = new List<String>();
         for (OpportunityContactRole ocr : contactRoles) {
             toAddresses.add(ocr.Contact.Email);
         }
-        
-        // 5. Construct and Send the Email
-        //Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
-        //email.setToAddresses(toAddresses);
-        //email.setSubject('Power-Motors: Your Opportunity Details Summary');
-        //email.setPlainTextBody('Dear Partner,\n\nPlease find attached the finalized details regarding your recent opportunity with Power-Motors.\n\nBest regards,\nPower-Motors Team');
-        //email.setFileAttachments(new List<Messaging.EmailFileAttachment>{ attachment });
-        
-       // Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ email });
 
      String htmlContent = 
             '<html>' +
@@ -122,13 +108,6 @@ public class OpportunityPDFEmailer {
 
     Blob pdfBlob = Blob.toPdf(htmlContent);
 
-        // 5. Insert File and link directly to the Opportunity
-       // ContentVersion cv = new ContentVersion();
-        //cv.Title = 'Order_Summary_' + opp.Name + '.pdf';
-        //cv.PathOnClient = 'Order_Summary.pdf';
-       // cv.VersionData = pdfBlob;
-       // cv.IsMajorVersion = true;
-        //insert cv;
    Messaging.EmailFileAttachment attachment = new Messaging.EmailFileAttachment();
         attachment.setFileName('Opportunity_Detail.pdf');
         attachment.setBody(pdfBlob);
@@ -143,8 +122,6 @@ public class OpportunityPDFEmailer {
         
         Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ email });
     
-    
-
     }
 
 }

@@ -1,0 +1,87 @@
+<template>
+    <lightning-card title="B2C Product Catalog" icon-name="standard:product">
+        <div slot="actions">
+            <lightning-button
+                label="Save & Create Order"
+                onclick={handleSave}
+                variant="brand"
+                disabled={isSaveDisabled}>
+            </lightning-button>
+        </div>
+
+        <div class="slds-grid slds-wrap slds-p-around_medium">
+            
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_8-of-12 slds-p-right_medium">
+                
+                <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-combobox
+                            name="category"
+                            label="Filter by Category"
+                            value={selectedCategory}
+                            options={categoryOptions}
+                            onchange={handleFilterChange}>
+                        </lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-combobox
+                            name="country"
+                            label="Filter by Country of Origin"
+                            value={selectedCountry}
+                            options={countryOptions}
+                            onchange={handleFilterChange}>
+                        </lightning-combobox>
+                    </div>
+                </div>
+
+                <div style="height: 400px;">
+                    <lightning-datatable
+                        key-field="pbeId"
+                        data={filteredProducts}
+                        columns={columns}
+                        onrowselection={handleRowSelection}
+                        onrowaction={handleRowAction}
+                        selected-rows={selectedRowIds}>
+                    </lightning-datatable>
+                </div>
+            </div>
+
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 slds-border_left slds-p-left_medium">
+                <div class="slds-box slds-theme_shade" style="max-height: 400px; overflow-y: auto;">
+                    <h2 class="slds-text-heading_medium slds-m-bottom_medium slds-border_bottom slds-p-bottom_small">Product Specifications</h2>
+                    
+                    <template if:true={selectedProduct}>
+                        <div class="slds-align_absolute-center slds-m-bottom_medium">
+                            <img src={selectedProduct.imageUrl} alt={selectedProduct.name} style="max-height: 90px; max-width: 100%; object-fit: contain;"/>
+                        </div>
+                        <div class="slds-text-longform">
+                            <p><strong>Name:</strong> {selectedProduct.name}</p>
+                            <p><strong>Category:</strong> {selectedProduct.recordType}</p>
+                            <p><strong>Origin:</strong> {selectedProduct.origin}</p>
+                            <p><strong>Life Expectancy:</strong> {selectedProduct.lifeExpectancy} Years</p>
+                            <p><strong>Description:</strong> {selectedProduct.description}</p>
+
+                            <template if:true={selectedProduct.isGenerator}>
+                                <div class="slds-m-top_medium slds-p-top_small slds-border_top">
+                                    <h4>Generator Specs</h4>
+                                    <p><strong>Size:</strong> {selectedProduct.size}</p>
+                                    <p><strong>Weight:</strong> {selectedProduct.weight} kg</p>
+                                    <p><strong>Phase:</strong> {selectedProduct.phase}</p>
+                                    <p><strong>Power:</strong> {selectedProduct.powerKVA} KVA</p>
+                                    <p><strong>Engine Type:</strong> {selectedProduct.engineType}</p>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template if:false={selectedProduct}>
+                        <div class="slds-align_absolute-center slds-text-color_weak slds-p-around_large">
+                            Click the "View Specs" button on any row to display live details.
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+        </div>
+    </lightning-card>
+</template>
