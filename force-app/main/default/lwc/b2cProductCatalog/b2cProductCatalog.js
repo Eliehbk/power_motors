@@ -3,7 +3,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getPicklistValues } from 'lightning/uiObjectInfoApi';
 import ORIGIN_FIELD from '@salesforce/schema/Product2.Country_of_Origin__c';
 import getB2CProducts from '@salesforce/apex/B2CProductController.getPriceBookItem';
-
+import createWonOpportunity from '@salesforce/apex/B2CProductController.createWonOpportunity';
 export default class B2cProductCatalog extends LightningElement {
     @api recordId;
 
@@ -149,11 +149,23 @@ export default class B2cProductCatalog extends LightningElement {
             }
         }
     }
-
     get isSaveDisabled() {
         return this.selectedRowIds.length === 0;
     }
-    
+
+     handleSave() {
+        createWonOpportunity({ accountId: this.recordId, pbeIds: this.selectedRowIds })
+            .then(() => {
+
+                for (let i = 0; i < this.products.length; i++) {
+                    this.products[i].isSelected = false;
+                }
+                this.selectedRowIds = [];
+                this.selectedProduct = null;
+                this.applyFilters();
+            })
+    }
+
     showToast(title, message, variant) {
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
