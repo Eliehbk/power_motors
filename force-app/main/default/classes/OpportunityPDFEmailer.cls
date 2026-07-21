@@ -1,3 +1,9 @@
+/** 
+@author                       Elie Habka
+@date                         7/21/2026
+@description                 This class generates a customized PDF document from an HTML template 
+//                              and emails it as an attachment to all contacts tied to the Opportunity.
+*/
 public with sharing class OpportunityPDFEmailer {
 
     @InvocableMethod(label='Send Opportunity PDF to Representatives')

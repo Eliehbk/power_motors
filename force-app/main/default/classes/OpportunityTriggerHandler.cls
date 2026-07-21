@@ -1,3 +1,8 @@
+/** 
+@author                       Elie Habka
+@date                         7/21/2026
+@description                  This class checks if an Opportunity's status was just changed to "Closed Won" or "Closed Lost", and automatically emails a PDF for it
+*/
 public with sharing class OpportunityTriggerHandler extends TriggerHandler implements ITriggerHandler {
 
     private Map<Id, Opportunity> newMap;
@@ -24,7 +29,6 @@ public with sharing class OpportunityTriggerHandler extends TriggerHandler imple
     public override void afterInsert() {
     }
 public override void afterUpdate() {
-        // Create a list to hold the IDs of the opportunities that match our criteria
         List<Id> oppIdsToSend = new List<Id>();
         
         for (Opportunity opp : TriggerNew) {
