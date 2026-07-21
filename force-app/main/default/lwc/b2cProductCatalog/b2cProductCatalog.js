@@ -1,10 +1,18 @@
+/** 
+@author                       Elie Habka
+@date                         7/21/2026
+@description                  This Lightning Web Component handles displaying a searchable product catalog, filtering products by category or country,
+                                 viewing product details, and creating a won Opportunity from the selected items.
+*/
+
 import { LightningElement, api, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getPicklistValues } from 'lightning/uiObjectInfoApi';
+import { NavigationMixin } from 'lightning/navigation';
 import ORIGIN_FIELD from '@salesforce/schema/Product2.Country_of_Origin__c';
 import getB2CProducts from '@salesforce/apex/B2CProductController.getPriceBookItem';
 import createWonOpportunity from '@salesforce/apex/B2CProductController.createWonOpportunity';
-export default class B2cProductCatalog extends LightningElement {
+export default class B2cProductCatalog extends NavigationMixin(LightningElement) {
     @api recordId;
 
     products = [];
@@ -153,9 +161,9 @@ export default class B2cProductCatalog extends LightningElement {
         return this.selectedRowIds.length === 0;
     }
 
-     handleSave() {
+       handleSave() {
         createWonOpportunity({ accountId: this.recordId, pbeIds: this.selectedRowIds })
-            .then(() => {
+            .then((newOppId) => {
 
                 for (let i = 0; i < this.products.length; i++) {
                     this.products[i].isSelected = false;
@@ -163,7 +171,16 @@ export default class B2cProductCatalog extends LightningElement {
                 this.selectedRowIds = [];
                 this.selectedProduct = null;
                 this.applyFilters();
-            })
+            
+            this[NavigationMixin.Navigate]({
+                type: 'standard__recordPage',
+                attributes: {
+                    recordId: newOppId,
+                    objectApiName: 'Opportunity',
+                    actionName: 'view'
+                }
+            });
+})
     }
 
     showToast(title, message, variant) {

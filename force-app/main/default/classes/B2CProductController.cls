@@ -1,3 +1,8 @@
+/** 
+@author                       Elie Habka
+@date                         7/21/2026
+@description                   This class fetches active B2C product pricing details for display in Lightning Web Components and creates a "Closed Won" Opportunity with associated line items for walk-in sales.
+*/
 public with sharing class B2CProductController {
     @AuraEnabled(cacheable=true)
     public static List<PricebookEntry> getPriceBookItem(){
@@ -14,7 +19,7 @@ public with sharing class B2CProductController {
         ];
     }
 @AuraEnabled
-    public static void createWonOpportunity(Id accountId, List<Id> pbeIds){
+    public static ID createWonOpportunity(Id accountId, List<Id> pbeIds){
 String targetPricebook = System.Label.B2C_Pricebook_Name;
 pricebook2 b2cPricebook = [SELECT Id FROM Pricebook2 WHERE Name = :targetPricebook LIMIT 1];
 
@@ -41,7 +46,7 @@ for(PricebookEntry pbe : PbeList){
         );
             }
  insert olis;
-    
+return opp.ID;
     }
 
         }
