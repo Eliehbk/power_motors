@@ -37,13 +37,21 @@
                 <div style="height: 400px;">
                     <lightning-datatable
                         key-field="pbeId"
-                        data={filteredProducts}
+                        data={products}
                         columns={columns}
                         onrowselection={handleRowSelection}
                         onrowaction={handleRowAction}
                         selected-rows={selectedRowIds}>
                     </lightning-datatable>
+
+            <div class="slds-grid slds-grid_align-center slds-m-top_medium">
+                <lightning-button label="Previous" onclick={previousPage} disabled={isPrevDisabled}></lightning-button>
+                <span class="slds-m-horizontal_medium">Page {currentPage}</span>
+                <lightning-button label="Next" onclick={nextPage} disabled={isNextDisabled}></lightning-button>
+            </div>
+
                 </div>
+
             </div>
 
             <div class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 slds-border_left slds-p-left_medium">

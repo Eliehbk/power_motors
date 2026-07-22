@@ -1,24 +1,27 @@
 /** 
-@author                       Elie Habka
-@date                         7/21/2026
-@description                  This Lightning Web Component handles displaying a searchable product catalog, filtering products by category or country,
-                                 viewing product details, and creating a won Opportunity from the selected items.
+@author          Elie Habka
+@date            7/21/2026
+@description     This Lightning Web Component handles displaying a searchable product catalog, filtering products by category or country,
+                  viewing product details, and creating a won Opportunity from the selected items.
 */
-
 import { LightningElement, api, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getPicklistValues } from 'lightning/uiObjectInfoApi';
 import { NavigationMixin } from 'lightning/navigation';
 import ORIGIN_FIELD from '@salesforce/schema/Product2.Country_of_Origin__c';
-import getB2CProducts from '@salesforce/apex/B2CProductController.getPriceBookItem';
+import getB2CProductsPaged from '@salesforce/apex/B2CProductController.getB2CProductsPaged';
 import createWonOpportunity from '@salesforce/apex/B2CProductController.createWonOpportunity';
+
 export default class B2cProductCatalog extends NavigationMixin(LightningElement) {
     @api recordId;
 
     products = [];
-    filteredProducts = [];
     selectedProduct = null;
     selectedRowIds = [];
+
+    pageSize = 5;
+    currentPage = 1;
+    hasNextPage = false;
 
     selectedCategory = 'All';
     selectedCountry = 'All';
@@ -37,16 +40,16 @@ export default class B2cProductCatalog extends NavigationMixin(LightningElement)
         { label: 'Type', fieldName: 'recordType', type: 'text' },
         { label: 'Origin', fieldName: 'origin', type: 'text' },
         { label: 'Price', fieldName: 'price', type: 'currency', cellAttributes: { alignment: 'left' } },
-        {  type: 'button-icon',
-            width: 50, 
+        {
+            type: 'button-icon',
+            width: 50,
             typeAttributes: {
                 iconName: 'utility:preview',
                 name: 'view_details',
                 title: 'Click to view details',
                 variant: 'border-filled',
                 alternativeText: 'View Specs'
-            }
-        }
+            } }
     ];
 
     @wire(getPicklistValues, {
@@ -57,93 +60,88 @@ export default class B2cProductCatalog extends NavigationMixin(LightningElement)
         if (result.data) {
             const options = [{ label: 'All Countries', value: 'All' }];
             for (let i = 0; i < result.data.values.length; i++) {
-                const item = result.data.values[i];
-                options.push({ label: item.label, value: item.value });
+                options.push({ label: result.data.values[i].label, value: result.data.values[i].value });
             }
-            this.countryOptions = options;
-        } else if (result.error) {
-            this.error = result.error;
-        }
-    }
+            this.countryOptions = options;}}
 
-    @wire(getB2CProducts)
+    @wire(getB2CProductsPaged, {
+        pageNumber: '$currentPage',
+        pageSize: '$pageSize',
+        category: '$selectedCategory',
+        country: '$selectedCountry'
+    })
     wiredProducts(result) {
-        if (result.data) {
-            const list = [];
-
-            for (let i = 0; i < result.data.length; i++) {
-                const pbe = result.data[i];
-                const product = pbe.Product2;
-                const recType = product.RecordType ? product.RecordType.DeveloperName : '';
-
-                list.push({
-                    pbeId: pbe.Id,
-                    name: product.Name,
-                    code: product.ProductCode,
-                    recordType: recType,
-                    origin: product.Country_of_Origin__c,
-                    price: pbe.UnitPrice,
-                    lifeExpectancy: product.Average_Life_Expectancy__c,
-                    imageUrl: product.Image_URL__c ,
-                    isGenerator: recType === 'Generators',
-                    size: product.Size__c,
-                    weight: product.Weight_kg__c,
-                    phase: product.Phase__c,
-                    powerKVA: product.Power_Generated_KVA__c,
-                    engineType: product.Engine_Type__c,
-                    description: product.Description,
-                    isSelected: false
-                });
-            }
-
-            this.products = list;
-            this.applyFilters();
-        } else if (result.error) {
-            this.error = result.error;
+        if (!result.data) {
+            return;
         }
-    }
 
+        const records = result.data;
+        this.hasNextPage = records.length > this.pageSize;
+        const productList = [];
+
+        for (let i = 0; i < records.length; i++) {
+            if (i >= this.pageSize) {
+                break;
+            }
+            const pbe = records[i];
+            const product = pbe.Product2;
+
+           let recType;
+            if (product.RecordType) {recType = product.RecordType.DeveloperName;} 
+            else {recType = '';}
+
+            productList.push({
+                pbeId: pbe.Id,
+                name: product.Name,
+                code: product.ProductCode,
+                recordType: recType,
+                origin: product.Country_of_Origin__c,
+                price: pbe.UnitPrice,
+                lifeExpectancy: product.Average_Life_Expectancy__c,
+                imageUrl: product.Image_URL__c,
+                isGenerator: recType === 'Generators',
+                size: product.Size__c,
+                weight: product.Weight_kg__c,
+                phase: product.Phase__c,
+                powerKVA: product.Power_Generated_KVA__c,
+                engineType: product.Engine_Type__c,
+                description: product.Description
+            });
+        }
+        this.products = productList;
+        this.selectedRowIds = this.copyArray(this.selectedRowIds);
+    }
     handleFilterChange(event) {
         if (event.target.name === 'category') {
             this.selectedCategory = event.target.value;
         }
         if (event.target.name === 'country') {
-            this.selectedCountry = event.target.value;
-        }
-        this.applyFilters();
-    }
+            this.selectedCountry = event.target.value;}
 
-    applyFilters() {
-        const result = [];
+        this.currentPage = 1;}
+    handleRowSelection(event) {
+        const checkedRowsOnThisPage = event.detail.selectedRows;
 
+        const idsOnThisPage = [];
         for (let i = 0; i < this.products.length; i++) {
-            const item = this.products[i];
-            const categoryMatches = this.selectedCategory === 'All' || item.recordType === this.selectedCategory;
-            const countryMatches = this.selectedCountry === 'All' || item.origin === this.selectedCountry;
+            idsOnThisPage.push(this.products[i].pbeId);
+        }
 
-            if (categoryMatches && countryMatches) {
-                result.push(item);
+        const otherPageSelections = [];
+        for (let i = 0; i < this.selectedRowIds.length; i++) {
+            const id = this.selectedRowIds[i];
+            if (!this.isIdInList(id, idsOnThisPage)) {
+                otherPageSelections.push(id);
             }
         }
 
-        this.filteredProducts = result;
-    }
-
-    handleRowSelection(event) {
-        const selectedRows = event.detail.selectedRows;
-        const ids = [];
-
-        for (let i = 0; i < selectedRows.length; i++) {
-            ids.push(selectedRows[i].pbeId);
+        const newSelections = otherPageSelections;
+        for (let i = 0; i < checkedRowsOnThisPage.length; i++) {
+            newSelections.push(checkedRowsOnThisPage[i].pbeId);
         }
-        this.selectedRowIds = ids;
 
-        for (let i = 0; i < this.products.length; i++) {
-            const item = this.products[i];
-            item.isSelected = this.selectedRowIds.includes(item.pbeId);
-        }
+        this.selectedRowIds = newSelections;
     }
-
     handleRowAction(event) {
         const actionName = event.detail.action.name;
         const row = event.detail.row;
@@ -157,33 +155,55 @@ export default class B2cProductCatalog extends NavigationMixin(LightningElement)
             }
         }
     }
-    get isSaveDisabled() {
-        return this.selectedRowIds.length === 0;
-    }
-
-       handleSave() {
+    handleSave() {
         createWonOpportunity({ accountId: this.recordId, pbeIds: this.selectedRowIds })
             .then((newOppId) => {
-
-                for (let i = 0; i < this.products.length; i++) {
-                    this.products[i].isSelected = false;
-                }
                 this.selectedRowIds = [];
                 this.selectedProduct = null;
-                this.applyFilters();
-            
-            this[NavigationMixin.Navigate]({
-                type: 'standard__recordPage',
-                attributes: {
-                    recordId: newOppId,
-                    objectApiName: 'Opportunity',
-                    actionName: 'view'
-                }
+
+                this[NavigationMixin.Navigate]({
+                    type: 'standard__recordPage',
+                    attributes: {
+                        recordId: newOppId,
+                        objectApiName: 'Opportunity',
+                        actionName: 'view'
+                    }
+                });
+            })
+            .catch((error) => {
+                this.showToast('Error', error.body.message, 'error');
             });
-})
     }
 
-    showToast(title, message, variant) {
-        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+    previousPage() {
+        if (this.currentPage > 1) {
+            this.currentPage = this.currentPage - 1;}
     }
+
+    nextPage() {
+        if (this.hasNextPage) {
+            this.currentPage = this.currentPage + 1;}
+    }
+
+    isIdInList(id, listOfIds) {
+        for (let i = 0; i < listOfIds.length; i++) {
+            if (listOfIds[i] === id) {
+                return true;
+            }
+        }
+        return false; }
+
+    copyArray(originalArray) {
+        const newArray = [];
+        for (let i = 0; i < originalArray.length; i++) {
+            newArray.push(originalArray[i]);
+        }
+        return newArray;}
+
+    showToast(title, message, variant) {
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));}
+
+    get isSaveDisabled() {return this.selectedRowIds.length === 0;}
+    get isPrevDisabled() {return this.currentPage <= 1;}
+    get isNextDisabled() {return !this.hasNextPage;}
 }
