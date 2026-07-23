@@ -2,7 +2,7 @@
 @author                       Elie Habka
 @date                         7/21/2026
 @description                  This class checks if a Lead's website address was just added or changed,
-                                and triggers an asynchronous lookup for those Leads 
+                              and triggers an asynchronous lookup for those Leads 
 */
 public with sharing class LeadTriggerHandler extends TriggerHandler { 
     private Map<Id, Lead> newMap;

@@ -1,7 +1,7 @@
 /** 
 @author                       Elie Habka
 @date                         7/21/2026
-@description                   This class fetches active B2C product pricing details for display in Lightning Web Components and creates a "Closed Won" Opportunity with associated line items for walk-in sales.
+@description                  This class fetches active B2C product pricing details for display in Lightning Web Components and creates a "Closed Won" Opportunity with associated line items for walk-in sales.
 */
 public with sharing class B2CProductController {
 
@@ -9,24 +9,15 @@ public with sharing class B2CProductController {
     public static List<PricebookEntry> getB2CProductsPaged(Integer pageNumber, Integer pageSize, String category, String country) {
 
         String targetPricebook = System.Label.B2C_Pricebook_Name;
-
-        // Start with the base filter every query needs
         String whereClause = ' WHERE Pricebook2.Name = :targetPricebook AND IsActive = true';
 
-        // Add category filter only if the user picked one
         if (category != null && category != 'All') {
-            whereClause += ' AND Product2.RecordType.DeveloperName = :category';
-        }
+            whereClause += ' AND Product2.RecordType.DeveloperName = :category';}
 
-        // Add country filter only if the user picked one
         if (country != null && country != 'All') {
-            whereClause += ' AND Product2.Country_of_Origin__c = :country';
-        }
+            whereClause += ' AND Product2.Country_of_Origin__c = :country';}
 
-        // Figure out where this page starts in the full list of records
         Integer offsetValue = (pageNumber - 1) * pageSize;
-
-        // Ask for ONE extra record. If we get it back, we know a next page exists.
         Integer queryLimit = pageSize + 1;
 
         String recordsQuery =

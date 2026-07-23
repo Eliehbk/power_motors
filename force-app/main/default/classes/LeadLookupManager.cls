@@ -8,10 +8,6 @@ public class LeadLookupManager {
 
     @future(callout=true)
     public static void lookupLeadsAsync(List<Id> leadIds) {
-        lookupLeads(leadIds);
-    }
-
-    public static void lookupLeads(List<Id> leadIds) {
         if (leadIds == null || leadIds.isEmpty()) { return; }
 
         List<Lead> leads = [
@@ -21,7 +17,6 @@ public class LeadLookupManager {
         ];
 
         List<Lead> leadsToUpdate = new List<Lead>();
-        system.debug('leadss: '+leads);
         for (Lead ld : leads) {
             String json = HttpHelper.getAccountData(ld.Website);
             if (String.isBlank(json)) { continue; }
