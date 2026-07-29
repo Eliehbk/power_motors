@@ -27,8 +27,9 @@ public class HttpHelper {
         if (tokenRes.getStatusCode() != 200) {
             throw new CalloutException('Token request failed: ' + tokenRes.getBody());
         }
-
+        system.debug('string body: '+tokenRes.getBody());
         Map<String, Object> tokenJson = (Map<String, Object>) JSON.deserializeUntyped(tokenRes.getBody());
+        system.debug('json map: '+tokenJson);
         String accessToken = (String) tokenJson.get('access_token');
 
         

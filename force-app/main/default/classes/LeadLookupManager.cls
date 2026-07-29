@@ -22,14 +22,20 @@ public class LeadLookupManager {
             if (String.isBlank(json)) { continue; }
 
             LeadLookupWrapper result = LeadLookupWrapper.parse(json);
+            system.debug('wrapper result: '+result);
             if (result.records.isEmpty()) { continue; }
-
-            LeadLookupMapper.mapToLead(ld, result.records[0]);
+            system.debug('wrapper result: '+result.records);
+            LeadLookupMapper.mapToLead(ld, result.records[0]);//array of AccountRecord Object
             leadsToUpdate.add(ld);
         }
 
         if (!leadsToUpdate.isEmpty()) {
             update leadsToUpdate;
+            // for (integer i=0;i<leadsToUpdate.size();i++){
+                    Lead_Refresh_Event__e refreshEvent = new Lead_Refresh_Event__e(Lead_Id__c = leadsToUpdate[0].Id);
+                    EventBus.publish(refreshEvent);
+            // }
+            
         }
     }
 }

@@ -47,7 +47,9 @@ public with sharing class LeadTriggerHandler extends TriggerHandler {
     for (Lead ld : this.TriggerNew) {
         Lead oldLead = oldMap.get(ld.Id);
         if (ld.Website != oldLead.Website && String.isNotBlank(ld.Website)) {
-            eligibleLeads.add(ld.Id);}}
+            eligibleLeads.add(ld.Id);
+        }
+    }
     
             if (!eligibleLeads.isEmpty()) {
         LeadLookupManager.lookupLeadsAsync(eligibleLeads);

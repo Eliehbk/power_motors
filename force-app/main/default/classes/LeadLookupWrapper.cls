@@ -14,7 +14,7 @@ public class LeadLookupWrapper {
         public String description;
         public String street;
     }
-
+//new LeadLookupWrapper(new List<AccountRecord>{new AccountRecord('jdaflkjfa','150','1970',)})
     public static LeadLookupWrapper parse(String jsonString) {
         Map<String, Object> root = (Map<String, Object>) JSON.deserializeUntyped(jsonString);
 
